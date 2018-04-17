@@ -15,10 +15,10 @@ const (
 	crawlcap int = 50 // 蜘蛛池最大容量
 	// datachancap             int    = 2 << 14                     // 收集器容量(默认65536)
 	logcap                int64  = 10000                       // 日志缓存的容量
-	loglevel              string = "debug"                     // 全局日志打印级别（亦是日志文件输出级别）
+	loglevel              string = "info"                      // 全局日志打印级别（亦是日志文件输出级别）
 	logconsolelevel       string = "info"                      // 日志在控制台的显示级别
 	logfeedbacklevel      string = "error"                     // 客户端反馈至服务端的日志级别
-	loglineinfo           bool   = false                       // 日志是否打印行信息
+	loglineinfo           bool   = true                        // 日志是否打印行信息
 	logsave               bool   = true                        // 是否保存所有日志到本地文件
 	phantomjs             string = WORK_ROOT + "/phantomjs"    // phantomjs文件路径
 	proxylib              string = WORK_ROOT + "/proxy.lib"    // 代理ip文件路径

@@ -213,7 +213,8 @@ func MakeUrl(path string, schemeAndHost ...string) (string, bool) {
 }
 
 func Pinger(address string, timeoutSecond int) error {
-	return ping.Pinger(address, timeoutSecond)
+	_, err := ping.Pinger(address, timeoutSecond)
+	return err
 }
 
 func Ping(address string, timeoutSecond int) (alive bool, err error, timedelay time.Duration) {

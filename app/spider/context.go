@@ -91,7 +91,7 @@ func (self *Context) SetError(err error) {
 // Request.TryTimes默认为常量request.DefaultTryTimes，小于0时不限制失败重载次数;
 // Request.RedirectTimes默认不限制重定向次数，小于0时可禁止重定向跳转;
 // Request.RetryPause默认为常量request.DefaultRetryPause;
-// Request.DownloaderID指定下载器ID，0为默认的Surf高并发下载器，功能完备，1为PhantomJS下载器，特点破防力强，速度慢，低并发。
+// Request.DownloaderID 指定下载器ID，0为默认的Surf高并发下载器，功能完备，1为PhantomJS下载器，特点破防力强，速度慢，低并发。
 // 默认自动补填Referer。
 func (self *Context) AddQueue(req *request.Request) *Context {
 	// 若已主动终止任务，则崩溃爬虫协程

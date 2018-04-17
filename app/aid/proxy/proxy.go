@@ -12,7 +12,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
 	"github.com/henrylee2cn/pholcus/app/downloader/request"
 	"github.com/henrylee2cn/pholcus/app/downloader/surfer"
 	"github.com/henrylee2cn/pholcus/common/ping"
@@ -45,7 +44,7 @@ const (
 func New() *Proxy {
 	p := &Proxy{
 		ipRegexp:    regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`),
-		proxyRegexp: regexp.MustCompile(`https?://([\w]*:[\w]*@)?[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+`),
+		proxyRegexp: regexp.MustCompile(`[\S]+`),
 		allIps:      map[string]string{},
 		all:         map[string]bool{},
 		usable:      make(map[string]*ProxyForHost),
@@ -73,10 +72,11 @@ func (self *Proxy) Update() *Proxy {
 
 	proxys := self.proxyRegexp.FindAllString(string(b), -1)
 	for _, proxy := range proxys {
-		self.allIps[proxy] = self.ipRegexp.FindString(proxy)
+		//self.allIps[proxy] = self.ipRegexp.FindString(proxy)
+		self.allIps[proxy] = proxy
 		self.all[proxy] = false
-		// fmt.Printf("+ 代理IP %v：%v\n", i, proxy)
-	}
+		log.Printf("+ 代理IP：%v\n", proxy)
+	}	
 	log.Printf(" *     读取代理IP: %v 条\n", len(self.all))
 
 	self.findOnline()
@@ -90,10 +90,11 @@ func (self *Proxy) findOnline() *Proxy {
 	self.online = 0
 	for proxy := range self.all {
 		self.threadPool <- true
-		go func(proxy string) {
+		go func(proxy string) {			
 			alive, _, _ := ping.Ping(self.allIps[proxy], CONN_TIMEOUT)
 			self.Lock()
 			self.all[proxy] = alive
+			log.Printf(" *     代理IP: %v %v",proxy,alive)
 			self.Unlock()
 			if alive {
 				atomic.AddInt64(&self.online, 1)
@@ -120,7 +121,7 @@ func (self *Proxy) UpdateTicker(tickMinute int64) {
 	}
 }
 
-// 获取本次循环中未使用的代理IP及其响应时长
+// 獲取本次循環中未使用的代理IP及其響應時長
 func (self *Proxy) GetOne(u string) (curProxy string) {
 	if self.online == 0 {
 		return

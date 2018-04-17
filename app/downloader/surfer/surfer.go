@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"sync"
+
+	"github.com/henrylee2cn/pholcus/app/downloader/request"
 )
 
 var (
@@ -32,7 +34,7 @@ var (
 	cookieJar, _  = cookiejar.New(nil)
 )
 
-func Download(req Request) (resp *http.Response, err error) {
+func Download(req *request.Request) (resp *http.Response, err error) {
 	switch req.GetDownloaderID() {
 	case SurfID:
 		once_surf.Do(func() { surf = New(cookieJar) })
@@ -57,5 +59,5 @@ type Surfer interface {
 	// HEAD @param url string, header http.Header, cookies []*http.Cookie
 	// POST PostForm @param url, referer string, values url.Values, header http.Header, cookies []*http.Cookie
 	// POST-M PostMultipart @param url, referer string, values url.Values, header http.Header, cookies []*http.Cookie
-	Download(Request) (resp *http.Response, err error)
+	Download(*request.Request) (resp *http.Response, err error)
 }

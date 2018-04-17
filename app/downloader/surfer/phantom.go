@@ -27,6 +27,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/henrylee2cn/pholcus/app/downloader/request"
+	"github.com/henrylee2cn/pholcus/logs" //信息输出
 )
 
 type (
@@ -87,7 +90,7 @@ func NewPhantom(phantomjsFile, tempJsDir string, jar ...*cookiejar.Jar) Surfer {
 }
 
 // 实现surfer下载器接口
-func (self *Phantom) Download(req Request) (resp *http.Response, err error) {
+func (self *Phantom) Download(req *request.Request) (resp *http.Response, err error) {
 	var encoding = "utf-8"
 	if _, params, err := mime.ParseMediaType(req.GetHeader().Get("Content-Type")); err == nil {
 		if cs, ok := params["charset"]; ok {
@@ -100,6 +103,12 @@ func (self *Phantom) Download(req Request) (resp *http.Response, err error) {
 	param, err := NewParam(req)
 	if err != nil {
 		return nil, err
+	}
+	cujs := req.GetTemp("js", "")
+	logs.Log.Informational("cujs: %v \n", cujs)
+	if cujs != "" {
+		cujs := cujs.(string)
+		self.createJsFile("js", cujs)
 	}
 
 	cookie := ""
@@ -123,8 +132,8 @@ func (self *Phantom) Download(req Request) (resp *http.Response, err error) {
 
 	resp = param.writeback(resp)
 	resp.Request.URL = param.url
-
-	var args = []string{
+	proxyArgs := make([]string, 2)
+	var defaultArgs = []string{
 		self.jsFileMap["js"],
 		req.GetUrl(),
 		cookie,
@@ -134,12 +143,21 @@ func (self *Phantom) Download(req Request) (resp *http.Response, err error) {
 		strings.ToLower(param.method),
 		fmt.Sprint(int(req.GetDialTimeout() / time.Millisecond)),
 	}
+	if param.proxy != nil {
+		logs.Log.Informational("phantom.Proxy: %v ### %v", param.proxy.Scheme, param.proxy.Host)
+		proxyArgs[0] = "--proxy=" + param.proxy.Host
+		proxyArgs[1] = "--proxy-type=" + "--proxy-type=" + param.proxy.Scheme
+		if param.proxy.User != nil {
+			proxyArgs = append(proxyArgs, "--proxy-auth="+param.proxy.User.String())
+		}
+	}
+	args := append(proxyArgs, defaultArgs...)
 
 	for i := 0; i < param.tryTimes; i++ {
 		if i != 0 {
 			time.Sleep(param.retryPause)
 		}
-
+		logs.Log.Informational("%v \n %v", self.PhantomjsFile, args)
 		cmd := exec.Command(self.PhantomjsFile, args...)
 		if resp.Body, err = cmd.StdoutPipe(); err != nil {
 			continue
@@ -241,7 +259,10 @@ var exit = function () {
     console.log(JSON.stringify(ret));
     phantom.exit();
 };
-
+page.viewportSize = {
+    width: 1920,
+    height: 1080
+};
 //输出参数
 // console.log("url=" + url);
 // console.log("cookie=" + cookie);
